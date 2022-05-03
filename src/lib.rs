@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use semver::Version;
 
 pub struct Bump<'a> {
@@ -12,7 +12,7 @@ pub struct Bump<'a> {
 
 pub fn get_latest_tag() -> Result<Version> {
     let latest_tag = run("git describe --abbrev=0 --tags")?;
-    let version = Version::parse(&latest_tag)?;
+    let version = Version::parse(strip_v(&latest_tag))?;
     Ok(version)
 }
 
@@ -21,14 +21,14 @@ pub fn get_all_tags() -> Result<Vec<Version>> {
     let all_tags: Vec<&str> = all_tags.split('\n').collect();
     let mut tags: Vec<Version> = Vec::with_capacity(all_tags.len());
     for tag in all_tags {
-        let version = Version::parse(tag)?;
+        let version = Version::parse(strip_v(tag))?;
         tags.push(version);
     }
     Ok(tags)
 }
 
 pub fn bump(b: &Bump) -> Result<()> {
-    let latest_tag = get_latest_tag().with_context(|| format!("error getting latest tag"))?;
+    let latest_tag = get_latest_tag()?;
 
     let version = Version::new(
         latest_tag.major + b.major,
@@ -37,13 +37,26 @@ pub fn bump(b: &Bump) -> Result<()> {
     );
 
     // Set latest tag.
-    run(&format!("git tag -a v{} -m v{}", version, version))?;
+    if !b.suffix.is_empty() {
+        run(&format!(
+            "git tag -a v{}-{} -m v{}-{}",
+            version, b.suffix, version, b.suffix
+        ))?;
+    } else {
+        run(&format!("git tag -a v{} -m v{}", version, version))?;
+    }
 
     Ok(())
 }
 
 pub fn init() -> Result<()> {
+    // Check if there's already a tag.
+    if let Ok(tag) = get_latest_tag() {
+        println!("tag already initialized: {}", tag);
+        return Ok(());
+    }
     run("git tag -a v0.1.0 -m v0.1.0")?;
+    println!("tag initialized with v0.1.0");
     Ok(())
 }
 
@@ -67,4 +80,11 @@ fn run(cmd: &str) -> Result<String> {
     Ok(String::from(
         String::from_utf8_lossy(&output.stdout).to_string().trim(),
     ))
+}
+
+fn strip_v(tag: &str) -> &str {
+    match tag.strip_prefix('v') {
+        Some(t) => t,
+        None => tag,
+    }
 }

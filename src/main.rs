@@ -1,7 +1,7 @@
 use anyhow::Result;
 use gumdrop::Options;
 use std::{env, process};
-use verbump::{get_latest_tag, init};
+use verbump::{bump, get_all_tags, get_latest_tag, init, Bump};
 
 #[derive(Options, Debug)]
 struct Args {
@@ -14,7 +14,7 @@ struct Args {
     #[options(help = "increments major version")]
     major: bool,
 
-    #[options(help = "increments patch version")]
+    #[options(help = "increments patch version", default = "true")]
     patch: bool,
 
     #[options(help = "shows the latest tag")]
@@ -22,14 +22,13 @@ struct Args {
 
     #[options(help = "inits a tag")]
     init: bool,
+
+    #[options(help = "shows all tags")]
+    all: bool,
 }
 
 fn main() {
     let os_args: Vec<String> = env::args().collect();
-    if os_args.len() == 1 {
-        print_help_and_exit(&os_args);
-    }
-
     let args = Args::parse_args_default_or_exit();
 
     match args {
@@ -40,6 +39,42 @@ fn main() {
         Args { init: true, .. } => {
             handle_error(init());
         }
+        Args { all: true, .. } => {
+            let all_tags = handle_error(get_all_tags());
+            for tag in all_tags {
+                println!("{}", tag);
+            }
+        }
+        Args { major: true, .. } => {
+            handle_error(bump(&Bump {
+                major: 1,
+                minor: 0,
+                patch: 0,
+                suffix: "",
+            }));
+            let latest_tag = handle_error(get_latest_tag());
+            println!("bumped to {}", latest_tag);
+        }
+        Args { minor: true, .. } => {
+            handle_error(bump(&Bump {
+                major: 0,
+                minor: 1,
+                patch: 0,
+                suffix: "",
+            }));
+            let latest_tag = handle_error(get_latest_tag());
+            println!("bumped to {}", latest_tag);
+        }
+        Args { patch: true, .. } => {
+            handle_error(bump(&Bump {
+                major: 0,
+                minor: 0,
+                patch: 1,
+                suffix: "",
+            }));
+            let latest_tag = handle_error(get_latest_tag());
+            println!("bumped to {}", latest_tag);
+        }
         _ => {
             print_help_and_exit(&os_args);
             println!("invalid flag")
@@ -47,7 +82,7 @@ fn main() {
     }
 }
 
-fn print_help_and_exit(os_args: &Vec<String>) {
+fn print_help_and_exit(os_args: &[String]) {
     eprintln!("Usage: {} [OPTIONS]", os_args[0]);
     eprintln!();
     eprintln!("{}", Args::usage());
