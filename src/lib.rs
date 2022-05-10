@@ -33,23 +33,21 @@ pub fn get_all_tags() -> Result<Vec<Version>> {
 }
 
 pub fn bump(b: &Bump) -> Result<()> {
-    let latest_tag = get_latest_tag()?;
-
-    let mut version = latest_tag.clone();
+    let mut version = get_latest_tag()?;
 
     // Bump the given version and set the lower parts to 0.
     match b.version_type {
         PartType::MAJOR => {
-            version.major = version.major + b.number;
+            version.major += b.number;
             version.minor = 0;
             version.patch = 0;
         }
         PartType::MINOR => {
-            version.minor = version.minor + b.number;
+            version.minor += b.number;
             version.patch = 0;
         }
         PartType::PATCH => {
-            version.patch = version.patch + b.number;
+            version.patch += b.number;
         }
     }
 
