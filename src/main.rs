@@ -47,9 +47,8 @@ fn main() {
         }
         Args { major: true, .. } => {
             handle_error(bump(&Bump {
-                major: 1,
-                minor: 0,
-                patch: 0,
+                version_type: verbump::PartType::MAJOR,
+                number: 1,
                 suffix: "",
             }));
             let latest_tag = handle_error(get_latest_tag());
@@ -57,9 +56,8 @@ fn main() {
         }
         Args { minor: true, .. } => {
             handle_error(bump(&Bump {
-                major: 0,
-                minor: 1,
-                patch: 0,
+                version_type: verbump::PartType::MINOR,
+                number: 1,
                 suffix: "",
             }));
             let latest_tag = handle_error(get_latest_tag());
@@ -67,9 +65,8 @@ fn main() {
         }
         Args { patch: true, .. } => {
             handle_error(bump(&Bump {
-                major: 0,
-                minor: 0,
-                patch: 1,
+                version_type: verbump::PartType::PATCH,
+                number: 1,
                 suffix: "",
             }));
             let latest_tag = handle_error(get_latest_tag());

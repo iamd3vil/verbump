@@ -3,10 +3,15 @@ use std::process::Command;
 use anyhow::{bail, Result};
 use semver::Version;
 
+pub enum PartType {
+    MAJOR,
+    MINOR,
+    PATCH,
+}
+
 pub struct Bump<'a> {
-    pub minor: u64,
-    pub major: u64,
-    pub patch: u64,
+    pub version_type: PartType,
+    pub number: u64,
     pub suffix: &'a str,
 }
 
@@ -30,11 +35,23 @@ pub fn get_all_tags() -> Result<Vec<Version>> {
 pub fn bump(b: &Bump) -> Result<()> {
     let latest_tag = get_latest_tag()?;
 
-    let version = Version::new(
-        latest_tag.major + b.major,
-        latest_tag.minor + b.minor,
-        latest_tag.patch + b.patch,
-    );
+    let mut version = latest_tag.clone();
+
+    // Bump the given version and set the lower parts to 0.
+    match b.version_type {
+        PartType::MAJOR => {
+            version.major = version.major + b.number;
+            version.minor = 0;
+            version.patch = 0;
+        }
+        PartType::MINOR => {
+            version.minor = version.minor + b.number;
+            version.patch = 0;
+        }
+        PartType::PATCH => {
+            version.patch = version.patch + b.number;
+        }
+    }
 
     // Set latest tag.
     if !b.suffix.is_empty() {
