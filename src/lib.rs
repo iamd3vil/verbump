@@ -93,6 +93,12 @@ pub fn bump(b: &Bump) -> Result<()> {
     Ok(())
 }
 
+pub fn push_latest() -> Result<String> {
+    let latest_tag = get_latest_tag()?;
+    let result = run(&format!("git push origin {}", latest_tag))?;
+    Ok(result)
+}
+
 pub fn init() -> Result<()> {
     // Check if there's already a tag.
     if let Ok(tag) = get_latest_tag() {

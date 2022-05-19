@@ -1,7 +1,7 @@
 use anyhow::Result;
 use gumdrop::Options;
 use std::{env, process};
-use verbump::{bump, get_all_tags, get_latest_tag, init, Bump};
+use verbump::{bump, get_all_tags, get_latest_tag, init, push_latest, Bump};
 
 #[derive(Options, Debug)]
 struct Args {
@@ -38,6 +38,12 @@ fn main() {
         Args { show: true, .. } => {
             let latest_tag = handle_error(get_latest_tag());
             println!("{}", latest_tag);
+        }
+        Args {
+            push_latest: true, ..
+        } => {
+            handle_error(push_latest());
+            println!("pushed latest tag");
         }
         Args { init: true, .. } => {
             handle_error(init());
