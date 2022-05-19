@@ -25,6 +25,9 @@ struct Args {
 
     #[options(help = "shows all tags")]
     all: bool,
+
+    #[options(help = "pushes the latest tag")]
+    push_latest: bool,
 }
 
 fn main() {
