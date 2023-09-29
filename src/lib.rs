@@ -5,9 +5,9 @@ use anyhow::{bail, Result};
 // use semver::Version;
 
 pub enum PartType {
-    MAJOR,
-    MINOR,
-    PATCH,
+    Major,
+    Minor,
+    Patch,
 }
 
 pub struct Version {
@@ -17,20 +17,20 @@ pub struct Version {
 
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut fmt_string = format!("{}", self.version);
         if self.v_prefix {
-            fmt_string = format!("v{}", self.version);
+            write!(f, "v{}", self.version)
+        } else {
+            write!(f, "{}", self.version)
         }
-        write!(f, "{}", fmt_string)
     }
 }
 
 impl Version {
     pub fn parse(version: &str) -> Result<Version> {
-        let ver = semver::Version::parse(strip_v(&version))?;
+        let ver = semver::Version::parse(strip_v(version))?;
         Ok(Version {
             version: ver,
-            v_prefix: version.starts_with("v"),
+            v_prefix: version.starts_with('v'),
         })
     }
 }
@@ -49,13 +49,12 @@ pub fn get_latest_tag() -> Result<Version> {
 
 pub fn get_all_tags() -> Result<Vec<Version>> {
     let all_tags = run("git tag --sort=-refname")?;
-    let all_tags: Vec<&str> = all_tags.split('\n').collect();
-    let mut tags: Vec<Version> = Vec::with_capacity(all_tags.len());
-    for tag in all_tags {
-        let version = Version::parse(tag)?;
-        tags.push(version);
-    }
-    Ok(tags)
+    let tags: Result<Vec<Version>> = all_tags
+        .split('\n')
+        .filter(|tag| !tag.is_empty()) // Filter out any empty tags.
+        .map(Version::parse)
+        .collect(); // Collect results into a Vec<Version>.
+    tags
 }
 
 pub fn bump(b: &Bump) -> Result<()> {
@@ -63,16 +62,16 @@ pub fn bump(b: &Bump) -> Result<()> {
 
     // Bump the given version and set the lower parts to 0.
     match b.version_type {
-        PartType::MAJOR => {
+        PartType::Major => {
             version.version.major += b.number;
             version.version.minor = 0;
             version.version.patch = 0;
         }
-        PartType::MINOR => {
+        PartType::Minor => {
             version.version.minor += b.number;
             version.version.patch = 0;
         }
-        PartType::PATCH => {
+        PartType::Patch => {
             version.version.patch += b.number;
         }
     }
@@ -99,6 +98,12 @@ pub fn push_latest() -> Result<String> {
     Ok(result)
 }
 
+pub fn delete_latest() -> Result<String> {
+    let latest_tag = get_latest_tag()?;
+    let result = run(&format!("git tag -d {}", latest_tag))?;
+    Ok(result)
+}
+
 pub fn init() -> Result<()> {
     // Check if there's already a tag.
     if let Ok(tag) = get_latest_tag() {
@@ -110,6 +115,7 @@ pub fn init() -> Result<()> {
     Ok(())
 }
 
+/// run executes the given command and returns the output from the command.
 fn run(cmd: &str) -> Result<String> {
     let args: Vec<&str> = cmd.split(' ').collect();
 
@@ -133,8 +139,5 @@ fn run(cmd: &str) -> Result<String> {
 }
 
 fn strip_v(tag: &str) -> &str {
-    match tag.strip_prefix('v') {
-        Some(t) => t,
-        None => tag,
-    }
+    tag.strip_prefix('v').unwrap_or(tag)
 }

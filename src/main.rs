@@ -1,7 +1,7 @@
 use anyhow::Result;
 use gumdrop::Options;
 use std::{env, process};
-use verbump::{bump, get_all_tags, get_latest_tag, init, push_latest, Bump};
+use verbump::{bump, delete_latest, get_all_tags, get_latest_tag, init, push_latest, Bump};
 
 #[derive(Options, Debug)]
 struct Args {
@@ -28,6 +28,9 @@ struct Args {
 
     #[options(help = "pushes the latest tag")]
     push_latest: bool,
+
+    #[options(help = "deletes latest tag")]
+    delete_latest: bool,
 }
 
 fn main() {
@@ -38,6 +41,14 @@ fn main() {
         Args { show: true, .. } => {
             let latest_tag = handle_error(get_latest_tag());
             println!("{}", latest_tag);
+        }
+        Args {
+            delete_latest: true,
+            ..
+        } => {
+            let latest_tag = handle_error(get_latest_tag());
+            handle_error(delete_latest());
+            println!("deleted {}", latest_tag);
         }
         Args {
             push_latest: true, ..
@@ -56,7 +67,7 @@ fn main() {
         }
         Args { major: true, .. } => {
             handle_error(bump(&Bump {
-                version_type: verbump::PartType::MAJOR,
+                version_type: verbump::PartType::Major,
                 number: 1,
                 suffix: "",
             }));
@@ -65,7 +76,7 @@ fn main() {
         }
         Args { minor: true, .. } => {
             handle_error(bump(&Bump {
-                version_type: verbump::PartType::MINOR,
+                version_type: verbump::PartType::Minor,
                 number: 1,
                 suffix: "",
             }));
@@ -74,7 +85,7 @@ fn main() {
         }
         Args { patch: true, .. } => {
             handle_error(bump(&Bump {
-                version_type: verbump::PartType::PATCH,
+                version_type: verbump::PartType::Patch,
                 number: 1,
                 suffix: "",
             }));
