@@ -1,0 +1,28 @@
+releases:
+  - name: "Release to github"
+    dist_folder: "./dist"
+    targets:
+      github:
+        owner: "iamd3vil"
+        repo: "verbump"
+    checksum:
+      algorithm: "sha256"
+    builds:
+      - command: "just build-linux"
+        bin_name: "verbump"
+        artifact: "target/x86_64-unknown-linux-gnu/release/verbump"
+        name: "verbump-linux-x86_64"
+        additional_files:
+          - "README.md"
+      - command: "just build-windows"
+        bin_name: "verbump.exe"
+        artifact: "target/x86_64-pc-windows-gnu/release/verbump.exe"
+        name: "verbump-windows-x86_64"
+        additional_files:
+          - "README.md"
+      - command: "just build-macos"
+        bin_name: "verbump_aarch64-apple-darwin"
+        artifact: "target/aarch64-apple-darwin/release/verbump"
+        name: "verbump-darwin-aarch64"
+        additional_files:
+          - "README.md"
