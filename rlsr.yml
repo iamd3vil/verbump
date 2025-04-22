@@ -11,18 +11,28 @@ releases:
       - command: "just build-linux"
         bin_name: "verbump"
         artifact: "target/x86_64-unknown-linux-gnu/release/verbump"
-        name: "verbump-linux-x86_64"
+        archive_name: "verbump-{{ meta.tag }}-linux-x86_64.tar.gz"
+        name: "Linux build"
         additional_files:
           - "README.md"
       - command: "just build-windows"
         bin_name: "verbump.exe"
         artifact: "target/x86_64-pc-windows-gnu/release/verbump.exe"
-        name: "verbump-windows-x86_64"
+        archive_name: "verbump-{{ meta.tag }}-windows-x86_64.zip"
+        name: "Windows build"
         additional_files:
           - "README.md"
       - command: "just build-macos"
         bin_name: "verbump_aarch64-apple-darwin"
         artifact: "target/aarch64-apple-darwin/release/verbump"
-        name: "verbump-darwin-aarch64"
+        archive_name: "verbump-{{ meta.tag }}-darwin-aarch64.tar.gz"
+        name: "macOS build"
         additional_files:
           - "README.md"
+
+changelog:
+  format: "github"
+  exclude:
+    - "^chore:"
+    - "^doc:"
+    - "^ci:"
